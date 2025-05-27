@@ -88,48 +88,6 @@ The output of `jones_execution` is a dictionary where the **keys** represent the
 The above output implies that the Jones polynomial of the trefoil is $A^{-4}+A^{-12}-A^{-16}$.
 
 
----
-## Overview of Jones.py
-
-The user calls the `jones_execution` function to compute the Jones polynomial. This function is built by means of a collection of
-internal functions which are briefly described in the following table.
-
-### Internal Functions
-| **Function**                          | **Purpose**                                                                                                    |
-|---------------------------------------|----------------------------------------------------------------------------------------------------------------|
-| `get_jones_poly(coords, proj_vector, Inds)`  | Computes the Jones polynomial by projecting 3D coordinates onto a 2D plane and calculating the polynomial.   |
-| `crossing_matrices_bool(proj, inds, depth)` | Generates crossing matrices and boolean masks representing edge crossings, over/under status, and orientations. |
-| `get_partial_poly(bool_mask, over_or_under, right_or_left, inds, clos_perm, modf_inds, states, S)` | Recursively computes the bracket polynomial using crossing matrices and edge relations.                          |
-| `split_jones(arg_1, arg_2, clos_perm, Wr)`    | Splits the knot/link into smaller linkoids for parallel computation of the Jones polynomial.                  |
-| `find_arc(bool_mask, inds)`                | Finds arcs in the crossing matrices to split the knot or link into linkoids.                                  |
-| `get_writhe(proj, inds)`                    | Calculates the writhe (topological invariant) of the knot or link.                                            |
-| `form_indices(coords, proj_vector)`        | Forms indices that define the knot or link structure based on the 3D coordinates and the projection vector.    |
-| `process_projection(coords, proj_vector)`   | Projects the 3D coordinates onto a 2D plane based on the specified projection vector.                         |
-
-
----
-## Overview of functions.py
-Utility functions for **knot theory** computations used in **Jones.py**, including Reidemeister moves, graph simplification, and polynomial operations.
-
-| **Function**               | **Description**                                                   |
-|----------------------------|-------------------------------------------------------------------|
-| `get_random_proj()`   | Generates a random point on the surface of a unit sphere to specify a direction of projection.        |
-| `fibonacci_sphere(samples)` | Uniformly samples points on a sphere using the Fibonacci lattice. |
-|`get_two_vec(proj_vec)`| Finds two orthonormal vectors orthogonal to a given 3D vector.   |
-| `getRoots(aNeigh)`    | Finds connected components in a graph.                           |
-| `Loops(inds, clos_perm)` | Partitions vertices into disjoint sets based on closure relations. |
-| `det2x2(A)`            | Computes the determinant of a 2x2 matrix.                        |
-|`Cramer(A)`           | Solves a 2x2 linear system using Cramer’s rule.                  |
-|`find_conn(d, g, inds, bool_mask)` | Checks if two vertices in a graph are connected.           |
-|`simplification(BM, over_or_under, inds)` | Simplifies a knot graph using Reidemeister moves.        |
-|`max_len(Ch)`          | Finds the maximum length of elements in a list.                 |
-|`J_mult(P, Q)`        | Multiplies two polynomials.                                      |
-|`J_add(P, Q)`         | Adds two polynomials.                                            |
-|`J_smult(a, P)`        | Scales a polynomial by a scalar.                                |
-|`dfactor(N)`          | Returns the polynomial $(-A^{-2}-A^{2})^{N}$.             |
-
----
-
 ## License
 BSD 3-Clause "New" or "Revised" License
 Copyright (c) 2021, Kasturi Barkataki and Eleni Panagiotou
