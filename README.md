@@ -46,9 +46,12 @@ To use this package, the following dependencies should be installed:
 ---
 ## **Usage**
 
-The  **Jones.py** calculates the Jones polynomial of open or closed curves in 3D space. It takes the following inputs.  
+The  **ParJones.py** calculates the Jones polynomial of open or closed curves in 3D space.  It can be run from the command-line as follows :
 
-### **Inputs**  
+```./anaconda3/bin/python ParJones.py num_projections 'input_knot' closed parallel```
+ 
+
+### **Input Arguments**  
 | **Parameter**     | **Description**                              |
 |--------------------|----------------------------------------------|
 | `num_projections` | Number of projections for computation        | 
@@ -60,25 +63,14 @@ The  **Jones.py** calculates the Jones polynomial of open or closed curves in 3D
 
 ### **Example Execution**  
 
-```python
-import numpy as np  
-from functions import *
-from Jones import *
+The Jones polynomial of a closed trefoil in 3-space using the parallel algorithm over 1 projection:
 
-# User-defined inputs
-num_projections = 1  
-trefoil = np.array([[[1, 0, 0], [4, 0, 0], [1, 6, 2], [0, 2, -5], [5, 2, 5], [4, 6, -2]]], dtype=object)  
-closed = 1       # Closed curve  
-parallel = 1     # Parallel execution  
-
-# Run Jones Polynomial calculation
-jones_execution(num_projections, trefoil)
-```
+./anaconda3/bin/python ParJones.py 1 '[[[1, 0, 0],[4, 0, 0],[1, 6, 2],[0, 2, -5],[5, 2, 5],[4, 6, -2]]]' 1 1
 
 
 #### **Interpreting the Output**
 
-The output of `jones_execution` is a dictionary where the **keys** represent the powers of the variable $A$ in the Jones polynomial, and the **values** correspond to the coefficients for each respective power of $A$.
+The output of  is a dictionary where the **keys** represent the powers of the variable $A$ in the Jones polynomial, and the **values** correspond to the coefficients for each respective power of $A$.
 
 ```python
 {-9.0: -0.0, -8.0: -0.0, -4.0: 1.0, -12.0: 1.0, -16.0: -1.0, 0: 0.0}
