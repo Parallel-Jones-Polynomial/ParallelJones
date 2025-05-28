@@ -33,7 +33,7 @@ a continuous function of curve coordinates for collections of open curves.
 To use this package, the following dependencies should be installed:
 
 ### Dependencies:
-- **Python 3.7+**
+- **Anaconda Python interpreter Python 3.7+**
 - **Required Python packages**:
   - `numpy`: For numerical computations and array manipulations.
   - `math`: Provides mathematical functions (e.g., trigonometric, logarithmic).
