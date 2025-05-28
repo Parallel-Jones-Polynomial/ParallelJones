@@ -51,6 +51,17 @@ def fibonacci_sphere(samples):
 		points.append((x, y, z))
 	return points
 
+# def fibonacci_sphere(n):
+#   golden_angle = np.pi * (3 - np.sqrt(5))
+#   theta = golden_angle * np.arange(n)
+#   y = 1 - (np.arange(n) / float(n - 1)) * 2  # y goes from 1 to -1
+#   radius = np.sqrt(1 - y**2)
+
+#   x = np.cos(theta) * radius
+#   z = np.sin(theta) * radius
+
+#   points = list(zip(x, y, z))
+#   return points
 
 def get_two_vec(proj_vec): 
    a = np.zeros([3])
@@ -100,7 +111,14 @@ def getRoots(aNeigh):
       myToRet[findRoot(myI,myRoot)[0]].append(myI) 
    return myToRet  
 
-def Loops(inds,clos_perm):
+# clos_perm={0:2,2:0,3:5,5:3}
+# S_modf=[]
+# for K in S:
+# 	K_strands=K[1]
+# 	for 
+
+#Count how many loops described by the indices (undirected graph)
+def Loops(inds,clos_perm,n):
 	#print('Loopy',inds)
 	#print('clos_perm inside Loops',clos_perm)
 	## Take into account relation between indices due to closure permutation.
@@ -133,9 +151,45 @@ def Loops(inds,clos_perm):
 	L=[set(L_raw[i]) for i in L_raw]
 	## Ensure that elts in L are mutually disjoint
 	#print('NGB',NGB)
-	#print('L',L)			
+	#print('L',L)		
+	if n==1: # Special case when we want ti reduce the Size of set
+		# Iterate through each set in the partitions to reduce the size
+		for s in L:
+			# Create a copy of the set to avoid modifying it while iterating
+			to_remove = {i for i in s if len(NGB.get(i, [])) != 1}
+			# Remove elements from the set
+			s.difference_update(to_remove)
+	#print('NGB2',NGB)
+	#print('L2',L)
 	return NGB, L
 
+# #Count how many loops described by the indices (undirected graph)
+# def Loops(inds):
+# 	#print('Loopy',inds)
+# 	S={} #preimages
+# 	for i in inds:
+# 		for j in inds[i]:
+# 			try:
+# 				S[j]+=[i]
+# 			except:
+# 				S[j]=[i]		
+# 	## Neighbors of any i (a dictionary)
+# 	NGB=deepcopy(inds)
+# 	for i in S:
+# 		if i in NGB:
+# 			NGB[i]+=S[i]
+# 		else:
+# 			NGB[i]=S[i]
+# 	## Partition vertices into mutually disjoint sets.
+# 	L_raw=getRoots(NGB)
+# 	L=[set(L_raw[i]) for i in L_raw]
+# 	## Ensure that elts in L are mutually disjoint
+# 	#print('NGB',NGB)
+# 	#print('L',L)			
+# 	return NGB, L
+
+#This generates a matrix indicating which edges are crossing, where they are crossing, 
+#which line is on top, etc.
 ''' CRAMER'S RULE 2x2'''
 def det2x2(A):
 	assert A.shape == (2,2)
@@ -152,7 +206,8 @@ def Cramer(A):
 
 
 
-# Reidemeister MOVES
+## Reidemeister MOVES
+# Reidemeister 1
 def RM1(bool_mask,inds):
 	#print('total number of crossings before RM 1 :',np.count_nonzero(bool_mask)/2.)
 	Bin=[]
@@ -250,27 +305,19 @@ def find_conn(d, g, inds, bool_mask):
             flag = 1
     return V
 
+# if g not in Bin and (bool_mask[g, e] and over_or_under[a, c] == over_or_under[g, e]):
+# 	bool_mask[a, c] = False
+# 	bool_mask[c, a] = False
+# 	bool_mask[e, g] = False
+# 	bool_mask[g, e] = False
+# 	Bin.extend([a, c, e, g])
+
 def simplification(BM,over_or_under,inds):
-	print('total number of crossings before RM :',np.count_nonzero(BM)/2.)
-	#print('yep')
-	#BM=RM3(BM, over_or_under,inds)
-	#BM=RM2(BM, over_or_under,inds)
-	#print(BM)
-	
-	#BM=RM1(BM,inds)
-	#BM=RM2(BM,over_or_under,inds)
-	# for i in range(5):
-	# 	print(i,'-----')
-	# 	BM=RM1(BM,inds)	
-	for i in range(1):
-		print(i,'******')
+	#print('total number of crossings before RM :',np.count_nonzero(BM)/2.)
+	for i in range(10):
 		BM=RM1(BM,inds)	
 		BM=RM2(BM,over_or_under,inds)
-		BM=RM1(BM,inds)	
-	#for i in range(5):
-	#	BM=RM1(BM,inds)	
-	#print(BM)
-	print('total number of crossings after RM :',np.count_nonzero(BM)/2.)
+	#print('total number of crossings after RM :',np.count_nonzero(BM)/2.)
 	return BM		
 
 def max_len(Ch):
@@ -288,6 +335,27 @@ def J_mult(P,Q):
 			except:
 				Z[i+j]=P[i]*Q[j]
 	return Z
+def J_div(P):
+    Z = {}
+    P = P.copy()  # Avoid modifying original P
+
+    while P:
+        k = max(P.keys())  # Get highest power term
+        Z[k] = -P[k]  # Since Q has coefficients -1
+
+        # Subtract Q * this term from P
+        for e in (-2, 2):
+            if k + e in P:
+                P[k + e] += P[k]
+                if abs(P[k + e]) < 1e-10:  # Remove near-zero terms
+                    del P[k + e]
+            else:
+                P[k + e] = P[k]
+
+        del P[k]  # Remove processed term
+
+    return Z
+
 
 def J_add(P,Q):
 	Z=P.copy()
@@ -309,5 +377,4 @@ def dfactor(N):
 	for i in range(N):
 		dpoly=J_mult(dpoly,{-2:-1,2:-1})
 	return dpoly
-
 
