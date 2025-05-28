@@ -67,8 +67,9 @@ The  **ParJones.py** calculates the Jones polynomial of open or closed curves in
 
 The Jones polynomial of a closed trefoil in 3-space using the parallel algorithm over 1 projection:
 
+```python
 ./anaconda3/bin/python ParJones.py 1 '[[[1, 0, 0],[4, 0, 0],[1, 6, 2],[0, 2, -5],[5, 2, 5],[4, 6, -2]]]' 1 1
-
+```
 
 #### **Interpreting the Output**
 
