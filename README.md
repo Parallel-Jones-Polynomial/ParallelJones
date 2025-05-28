@@ -48,14 +48,14 @@ To use this package, the following dependencies should be installed:
 
 The  **ParJones.py** calculates the Jones polynomial of open or closed curves in 3D space.  It can be run from the command-line as follows :
 
-```./anaconda3/bin/python ParJones.py num_projections input_knot closed parallel```
+```python ./anaconda3/bin/python ParJones.py num_projections input_knot closed parallel```
  
 
 ### **Input Arguments**  
 | **Parameter**     | **Description**                              | **Type**
 |--------------------|----------------------------------------------|-------
 | `num_projections` | Number of projections for computation        | integer
-| `input_knot`      | A numpy array of open/closed curves where each curve is given as a list of 3D coordinates.| string
+| `input_knot`      | A list of 3D coordinates representing the knot/link in 3-space| string
 | `closed`          | Curve type (`1` for closed, `0` for open)    | integer
 | `parallel`        | Execution mode (`1` for parallel, `0` serial)| interger
 
