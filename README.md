@@ -11,6 +11,14 @@ Visit https://www.elenipanagiotou.com/ for updated information.
 
 ---
 
+## Acknowledgements
+
+Kasturi Barkataki and Eleni Panagiotou acknowledge support by the National Science
+Foundation, NSF DMS-1913180, NSF CAREER 2047587 and National Institutes of
+Health, grant number R01GM152735-01.
+
+---
+
 ## Table of Contents
 - [What is this package?](#what-is-this-package)
 - [Getting Started](#getting-started)
