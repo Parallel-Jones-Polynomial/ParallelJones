@@ -444,35 +444,28 @@ def find_arcs(inds, partition,clos_perm):
         I_final = I[:]
         I_complement = [node[0] for other_subgraph in partition if other_subgraph != subgraph for node in other_subgraph.nodes()]+[node[1] for other_subgraph in partition if other_subgraph != subgraph for node in other_subgraph.nodes()]
         for i in I:
-            print('start i', i)
             flag = 0
             visited = set()  # Track visited values to detect cycles
             
             while flag == 0:
                 if i in visited:  # Cycle detected, break to prevent infinite loop
-                    print(f"Cycle detected at {i}, breaking loop.")
                     break
                 visited.add(i)  # Mark as visited
                 
                 try:
                     i = inds[i]  # Try updating i using inds
-                    print('try 1', i)
                 except KeyError:
                     try:
                         i = clos_perm[i]  # Try updating i using clos_perm
-                        print('try 2', i)
                     except KeyError:
                         i += 1  # If both fail, increment i
-                        print('try 3', i)
 
                 if i not in I_complement:
                     if i not in I_final:
                         I_final.append(i)
                 else:
                     flag = 1  # Stop if i is in I_complement
-        print('I_final after', I_final)
         subgraph_edges.append(I_final)
-        print('final edges', subgraph.edges())
     return subgraph_edges
 
 
@@ -483,16 +476,11 @@ def form_indices(Ch,closed):
     ## Index labels vs. coordinates in 3-space
     coord_dict = {}
     clos_perm={}
-    #print('clos1',clos_perm)
     ## Generate indices for each component in Ch
     for ch in Ch:
-        ## Uncomment to print each component.
-        #print('component',ch)
         for i in range(len(ch)-1):
             ini_inds0[i+ini]=ini+i+1
             coord_dict[i+ini]=list(ch[i])
-        #ini_inds[ini+len(ch)-1]=ini 
-        #coord_dict[ini+len(ch)-1]=list(ch[len(ch)-1])
         if closed==1:
            ini_inds0[ini+len(ch)-1]=ini 
            coord_dict[ini+len(ch)-1]=list(ch[len(ch)-1])
@@ -501,23 +489,15 @@ def form_indices(Ch,closed):
            clos_perm[ini]=ini+len(ch)-1
            coord_dict[ini+len(ch)-1]=list(ch[len(ch)-1])    
         ini+=len(ch)   
-    #print('clos2',clos_perm)
     ini_inds=[ini_inds0,clos_perm]
-    #print('ini_inds',ini_inds)
     return coord_dict,ini_inds
 
 def process_projection(knot_data):
-    # Jones polynomial along a specific projection vector
-    # knot_data : indices dictionary, closure permutations, particular projection vector
-    #print('KD',knot_data)
     rj = get_jones_poly(*knot_data)
-    #print('rj',rj)
     return rj
 
 def process_partial_poly(knot_data):
-    #print('entered process partial poly')
     rj = get_partial_poly(*knot_data)
-    #print('rj process partial poly:', rj)
     return rj
 
 
@@ -558,7 +538,6 @@ def mult_2_elements(L_M):
     components = list(nx.connected_components(G))
     # Apply the function f(t) to each component and construct the collection of transposition P
     P = tuple(f([node[0] for node in component]) for component in components)
-    #print('Resultant', P)
     null_c = sum(1 for t in P if not t)
     P1 = tuple(t for t in P if t)
     if flag==0:
@@ -566,7 +545,6 @@ def mult_2_elements(L_M):
     else:
         # When Mult is done in the last step. d^{-1} factor has to be accounted for
         resultant={P1 : J_mult(wgt_factor, dfactor(null_c-1))}
-    #print('FINAL RESULTANT', resultant)
     return resultant
 
 def chunk_list(data, T):
@@ -585,7 +563,6 @@ def split_jones(All_args,clos_perm,Wr):
             results = pool.map(process_partial_poly, inputs)
             results_array = np.array(results)
             L_pp = results_array[:len(All_args), 0]
-            print('LPP',L_pp)
             ''' GLUING OF STATES IN PARALLEL''' 
             def chunk_list(data, T):
                 """Splits a dictionary into T approximately equal chunks."""
@@ -609,19 +586,15 @@ def split_jones(All_args,clos_perm,Wr):
                 return pool.map(mult_2_elements, elements_to_process)
             # MULTIPLICATION TAKES PLACE IN LEVELS AS FOLLOWS
             Num_levels=math.log(len(All_args))/math.log(2)
-            print('Num Levels', Num_levels)
             level_list=L_pp
-            #print('INITIAL Level List', level_list)
             T=2
             for i in range(int(Num_levels)): 
-                print('Level Number',i)
                 ultimate_level_list=[]
                 # flag1 = 1 only if we are at the FINAL LEVEL
                 flag1 = 0 if i != int(Num_levels) - 1 else 1
                 # Mult of two blocks in a given level
                 level_L = [multiply_lists(level_list[2*j], level_list[2*j+1], T, flag1) for j in range(len(level_list) // 2)]
                 level_list=level_L
-                print('Next Level List', level_list)
                 for pplist in level_list:
                     temp_dict = {}
                     for dict_elt in map(dict, pplist): 
@@ -631,7 +604,6 @@ def split_jones(All_args,clos_perm,Wr):
                     ultimate_level_list.append(temp_dict)
                 level_list=ultimate_level_list
                 T=2*T
-                print('Level List at this level', ultimate_level_list)
             try:    
                 final_result=J_mult(level_list[0][()],{3*(-Wr):(-1)**abs(Wr)})
             except:
@@ -648,7 +620,6 @@ def split_jones(All_args,clos_perm,Wr):
                 for tupp in level_list[0]:
                     final_result=J_add(final_result,J_mult(level_list[0][tupp],dfactor(int(count_loops(clos_perm,tupp)))))
                 final_result=J_mult(final_result,{3*(-Wr):(-1)**abs(Wr)})
-            print('split jones final result:',final_result)
         return final_result
     
 def jones_execution(num_projj, input_knot, closed, parallel):
@@ -679,7 +650,6 @@ def jones_execution(num_projj, input_knot, closed, parallel):
     for i in range(len(JPOLY)):
         Zpoly = J_add(JPOLY[i], Zpoly)
     # Normalize the result by the number of successful Jones polynomial calculations
-    print('regular vs. irregular projections', num_proj-Jnone, Jnone)
     num_proj = num_proj - Jnone
     try:
         Zpoly = J_smult(1./num_proj, Zpoly)
@@ -704,8 +674,8 @@ parser = argparse.ArgumentParser(description="Run jones_execution with command-l
 
 parser.add_argument("num_projj", type=int, help="Number of projections")
 parser.add_argument("input_knot", type=str, help="Input knot as a string (e.g., '[[[1, 0, 0],[4, 0, 0],...]]')")
-parser.add_argument("closed", type=int, choices=[0, 1], help="1 if knot is closed, 0 otherwise")
-parser.add_argument("parallel", type=int, choices=[0, 1], help="1 for parallel execution, 0 otherwise")
+parser.add_argument("closed", type=int, choices=[0, 1], help="1 if knot is closed, 0 if open")
+parser.add_argument("parallel", type=int, choices=[0, 1], help="1 for parallel execution, 0 if open")
 
 args = parser.parse_args()
 
