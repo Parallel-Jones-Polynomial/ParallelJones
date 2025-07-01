@@ -25,14 +25,8 @@ inds signifies the connections among the points in the curve in concern.
 '''
 """Calculate the Jones polynomial wrt a projection vector."""
 def get_jones_poly(coords, proj_vector, Inds, parallel):
-    #print('coordinates as indices', coords, file=fid)
-    #print('initial indices connectivity :',Inds[0], file =fid)
-    #print('Closure Perm:',Inds[1], file =fid)
     inds=Inds[0]
     clos_perm=Inds[1]
-    #print('inds',inds)
-    #print('clos_perm',clos_perm)
-    #print("#2")
     ## Generate two vectors from the projection vector
     x, y = get_two_vec(proj_vector)
     ## Project the coordinates onto the plane spanned by the two vectors
@@ -44,51 +38,24 @@ def get_jones_poly(coords, proj_vector, Inds, parallel):
         v_new=np.linalg.solve(W, v) 
         proj_new[i]=[v_new[0], v_new[1]]
         depth[i]=v_new[2]
-    ## Uncomment to view (x,y) coordinates along proj vec   
-    #print('New',proj_new)
-    ## Uncomment to view depth aka new z coordinate (along proj vec)
-    #print('depth',depth)    
     ## Check if the projection is irregular i.e. if 2 or more vertices are overlapping.
     Check_proj = np.unique([str(proj_new[i]) for i in proj_new], return_counts=True)
     if max(Check_proj[1]) >= 2:
-        #print('irreg points',max(Check_proj[1]))
         return None
     ## Generate crossing matrices and associated properties.
     bool_mask, over_or_under, right_or_left, inds = crossing_matrices_bool(proj_new, inds, depth)
-    #print('inds after addition', inds,file=fid)
     ## Calculate Writhe.
     Wr = get_writhe(bool_mask, over_or_under, right_or_left)
-    ## Uncomment to print the writhe and no. of crossings wrt the given projection.
-    #print('Writhe before RM', Wr)
-    #print('total number of crossings before RM :',np.count_nonzero(bool_mask)/2.,file=fid)
     ## Do Reidemeister Moves
     if np.count_nonzero(bool_mask)/2.>=20.:
         bool_mask=simplification(bool_mask, over_or_under,inds)
-        ## Uncomment to print the writhe and no. of crossings wrt the given projection.
-        #print('Writhe after RM', Wr)
-        #print('total number of crossings after RM :',np.count_nonzero(bool_mask)/2.,file=fid)
-        ## Identify very high crossing configurations
-        # if np.count_nonzero(bool_mask)/2.>20:
-        #     bool_mask=simplification(bool_mask, over_or_under,inds)
-        # if np.count_nonzero(bool_mask)/2.>20:
-        #     bool_mask=simplification(bool_mask, over_or_under,inds)
         Wr = get_writhe(bool_mask, over_or_under, right_or_left)
-        if np.count_nonzero(bool_mask)/2.>100:
-            return None
-            #return np.count_nonzero(bool_mask)/2.
-        # else:
-        #     #print(np.count_nonzero(bool_mask)/2.,proj_vector,file=fcd)
         if np.count_nonzero(bool_mask)/2.<1:
             return None
         else:
             pass
     ## Splitting Condition
     if parallel==1:
-    #if np.count_nonzero(bool_mask)/2. >2.:
-        #print('More',np.count_nonzero(bool_mask)/2. )
-        #print('# crossings', np.count_nonzero(bool_mask)/2., file=fid)
-        #print('Gauss Code', gauss_code(bool_mask,over_or_under,inds),file=fid)
-        #print('enters splitting')
         ## SPLITTING OF THE KNOT INTO 2 LINKOIDS L1 and L2
         def construct_crossing_graph(inds, bool_mask):
             # initialize empty graph
@@ -100,7 +67,6 @@ def get_jones_poly(coords, proj_vector, Inds, parallel):
                 for j in range(i + 1, k):
                     if bool_mask[i][j]:
                         crossings.append((i, j))
-            #print('crossings',crossings)
             # Each crossing becomes a vertex in G
             G.add_nodes_from(crossings)
             # add an edge between vertices v1 and v2 if there's a path in the knot diagram b/w v1 and v2
@@ -109,7 +75,6 @@ def get_jones_poly(coords, proj_vector, Inds, parallel):
                     if c1 != c2:
                         if is_connected(c1, c2, inds,crossings):
                             G.add_edge(c1, c2)
-            #print(G.nodes, G.edges)
             return G
 
         def is_connected(c1, c2, inds, crossings):
@@ -119,47 +84,34 @@ def get_jones_poly(coords, proj_vector, Inds, parallel):
             e2_2 = c2[1]
             # All the edges participating in crossings
             starts=[C[0] for C in crossings]+[C[1] for C in crossings] 
-            #print('ss',starts)
             # Check if e1_start and e2_start are directly connected  
             def traverse_path(start_edge, target_edge):
-                #print('start end edges :', start_edge,target_edge)
                 current_edge = start_edge     
                 conn=False   
                 flag=0
                 while flag==0:
-                    #print('current not none',current_edge)
                     if current_edge in starts:
                         if current_edge == start_edge:
                             current_edge = inds[current_edge]
-                            #print('next current:', current_edge)
                         elif current_edge == target_edge:
                             conn= True
                             flag=1
-                            #print('elif 2:', current_edge)
                         else:
                             conn= False
                             flag=1
-                            #print('else 3:', current_edge)
                     else:
                         # Move to the next edge in the path
                         try:
                             current_edge = inds[current_edge] 
                         except:
-                            current_edge = clos_perm[current_edge]
-                            #conn=False
-                            #flag=1
-                        #print('next current 44:', current_edge)       
+                            current_edge = clos_perm[current_edge]    
                 return conn
-            #print('TV',[(x, y) for x in (e1_1, e1_2) for y in (e2_1, e2_2)],[traverse_path(x, y) for x in (e1_1, e1_2) for y in (e2_1, e2_2)])
             check_conn = any(traverse_path(x, y) for x in (e1_1, e1_2) for y in (e2_1, e2_2))
-            #print('Check conn',c1, c2,check_conn)
-            # Ensure we are only looking at edges and crossings, without passing through other crossings
             return check_conn
 
         # Construct the crossing graph
         G = construct_crossing_graph(inds, bool_mask)
         # Apply Kernighan-Lin bisection algorithm
-        print('Graph info',G.edges,G.nodes)
         def get_subgraphs(G, partition):
             subset1, subset2 = partition
             return G.subgraph(subset1).copy(), G.subgraph(subset2).copy()
@@ -172,23 +124,14 @@ def get_jones_poly(coords, proj_vector, Inds, parallel):
         
         def create_arguments(n, bool_mask, over_or_under, right_or_left, inds,clos_perm):
             partition = split_ntimes(G, n)
-            print('Partition of crossings')
-            for G_i in partition:
-                print(G_i.nodes(), G_i.edges())
-            print('Indices',inds)
             arcs_per_piece = find_arcs(inds, partition,clos_perm)
-            print('No. of pieces', len(arcs_per_piece))
             args = []          
             for arcs in arcs_per_piece:
-                print('arcs in this pieces', arcs)
                 inds_sub = {k: v for k, v in inds.items() if k in arcs}
-                print('inds_sub', inds_sub)
                 for k in arcs:
                     if k not in inds_sub and k in clos_perm:
                         inds_sub[k] = clos_perm[k]
-                print('inds_sub_corr', inds_sub)
                 modf_inds_sub = {k: [v] for k, v in inds_sub.items()}
-                print('modf_inds', modf_inds_sub)
                 BM_sub = np.copy(bool_mask)
                 OU_sub = np.copy(over_or_under)
                 RL_sub = np.copy(right_or_left)
@@ -212,49 +155,29 @@ def get_jones_poly(coords, proj_vector, Inds, parallel):
             All_args=create_arguments(2, bool_mask, over_or_under, right_or_left, inds, clos_perm)
         else: 
             All_args=create_arguments(1, bool_mask, over_or_under, right_or_left, inds, clos_perm)
-        #print('preprocessing time', ee_time-ss_time, file=fid)
-        print('All_args', len(All_args))
         ## Return the Jones polynomial in terms of the bracket polynomial states of the L1 and L2 linkoids.
-        #SJ=split_jones(All_args[0],All_args[1],clos_perm,Wr)
         SJ=split_jones(All_args,clos_perm,Wr)
-        #print('Bkt with splitting',SJ)
         return SJ
     else:
         '''Serial Code'''
-        print('Less', np.count_nonzero(bool_mask)/2. )
         ## Compute the Bkt and Jones without splitting.
         states=[]
         modf_inds = {}
         for i in inds:
             modf_inds[i]=[inds[i]]
-        #print('Inds before get PP',Inds)
         start_time=time.time()
         L_bkt = get_partial_poly(bool_mask, over_or_under, right_or_left,inds,clos_perm, modf_inds,states,list(np.copy(states)))
-        ## Uncomment to print the bracket polynomials of the L1 and L2 linkoids.
-        print("L_bkt", L_bkt)
-        # Bkt_poly={0:0}
-        # for K in L_bkt:
-        #     Bkt_poly=J_add(Bkt_poly,J_mult({K[0]:1},dfactor(len(K[1])-1)))
         end_time=time.time()
-        print('Time taken serial :', end_time-start_time)
-        print('Bkt w/o splitting',L_bkt[0][()])
-        print('Jones w/o splitting',J_mult(L_bkt[0][()],{3*(-Wr):(-1)**abs(Wr)}))
         return J_mult(L_bkt[0][()],{3*(-Wr):(-1)**abs(Wr)})
         
 """Create crossing matrices, new vertices and other properties """
 def crossing_matrices_bool(proj, inds, depth):
-    #print("#3")
     ## Create ordered edges from inds dict
     edges={}
     ct=0
     for i in inds.keys():
         edges[i]=(i,inds[i])
         ct+=1 
-    ## Uncomment to view original inds, proj and edges.  
-    #print('inds1',inds)    
-    #print('edges1',edges)
-    #print('proj1',proj)   
-    #print('depths1',depth) 
     ## Create 4 types of matrices :
     ## bool_mask : a_ij = True (False) if edge i and edge j have (does not have) a crossing. 
     ## over_or_under : a_ij = True (False) if edge i lies above (does not lie above) edge j. 
@@ -263,31 +186,22 @@ def crossing_matrices_bool(proj, inds, depth):
     modf_inds0 = {}
     for i in inds:
         modf_inds0[i]=[inds[i]]
-    #print('modf_inds0 1 :', modf_inds0)
     Loops_as_sets=Loops(modf_inds0,{},0)[1]
-    #print('Loops_as_sets 1 :', Loops(modf_inds0,{})[1])
     total_inds=[]
     for elt in Loops_as_sets:
         total_inds+=list(elt)
-    #print('total inds 1 :',total_inds)
     I_inds=len(total_inds)
     bool_mask = np.zeros((I_inds,I_inds), dtype=bool)
     over_or_under = np.zeros((I_inds,I_inds), dtype=bool)
     right_or_left = np.zeros((I_inds,I_inds), dtype=bool)
     u = np.zeros((I_inds,I_inds), dtype=object)
-    #print('BM first', bool_mask)
     ## dif : stores vector rep for any edge, (p1,p2), in terms of coords of the endpoints : vec(p2)-vec(p1).
     ## flip neg : similar to dif but replace [x,y] -> [y,-x] (flipped and negative). Used in Cramer rule later.
     dif={}
     flip_neg={}
     for e in edges.keys():
-        #print('e',e,'edges[e]',edges[e])
-        #print(proj[edges[e][0]],proj[edges[e][1]])
         dif[e]=[proj[edges[e][1]][0]-proj[edges[e][0]][0],proj[edges[e][1]][1]-proj[edges[e][0]][1]]
         flip_neg[e]=[proj[edges[e][1]][1]-proj[edges[e][0]][1],-proj[edges[e][1]][0]+proj[edges[e][0]][0]]
-    ## Uncomment to view dif and flip_neg dictionaries.    
-    #print('diff', dif)
-    #print('flip neg diff', flip_neg)
     ## Iterate through each pair of edges to find intersection point(s) and update the matrices.
     ## intersection pt vs edges which contain it.
     intp_vs_edges = {} 
@@ -296,8 +210,6 @@ def crossing_matrices_bool(proj, inds, depth):
         for jj in range( ii+1,len(num_edges)):
             i=list(num_edges)[ii]
             j=list(num_edges)[jj]
-            #print('edgesss',ii,jj,i,j)
-            #print('Diffs',dif[i],dif[j])
             ## cross product +ve or -ve
             rl_ij=np.cross(dif[i],dif[j])
             ## Compute terms for the linear system to find intersections.
@@ -310,11 +222,8 @@ def crossing_matrices_bool(proj, inds, depth):
                 int_pt=[result[0], result[1]]
             except:
                 int_pt=None    
-            ## Uncomment to view intersection point between i and j.    
-            #print('intersection point',i, j, int_pt)
             ## If an intersection is found, matrices are updated as follows: 
             if int_pt != None:
-                #print('check Right or Left:',i,j,'R or L',rl_ij)
                 if rl_ij==0:
                     return None
                 ## Parameterize intersection points in terms of s and t.
@@ -330,18 +239,14 @@ def crossing_matrices_bool(proj, inds, depth):
                     s=(int_pt[1]-proj[edges[j][0]][1])/(proj[edges[j][1]][1]-proj[edges[j][0]][1])
                 ## Set a numerical threshold for zero
                 zero_val=1e-4
-                ## Uncomment to view intersection point between i and j.    
-                #print(i,j,'intersection point', int_pt, t, s)
                 ## Check if intersection point is a crossing i.e. lies within the edge segments.
                 if zero_val<t<1-zero_val and zero_val<s<1-zero_val: 
-                    #print(i,j,' good intersection point', int_pt, t, s)
                     bool_mask[i,j]=True
                     bool_mask[j,i]=True
                     intp_vs_edges[str(int_pt)]=[i,j]
                     ## Record which edge is over the other at the intersection point in over_or_under matrix.
                     zi=depth[edges[i][0]]+t*(depth[edges[i][1]]-depth[edges[i][0]])
                     zj=depth[edges[j][0]]+s*(depth[edges[j][1]]-depth[edges[j][0]])
-                    #print('edge1:',i, 'edge2:', j, 'R or L:',rl_ij,'O or U:',zi-zj)
                     if zi>zj:
                         ## edge i lies over edge j.
                         over_or_under[i,j]=True 
@@ -359,13 +264,6 @@ def crossing_matrices_bool(proj, inds, depth):
                     ## Record the intersection point.
                     u[i,j]=int_pt
                     u[j,i]=int_pt  
-    ## Uncomment to view matrices before new vertices are introduced. 
-    #print('original indices',inds)                
-    #print('bool_mask before new vertices:', bool_mask[25])
-    #print('over_or_under before new vertices:',over_or_under)
-    #print('right_or_left before new vertices:',right_or_left)
-    #print('intersection points matrix before new vertices:', u)
-
     ## Introduction of new vertices by creating subdivision of edges wherever one edge 
     ## participates in > 1 crossings. Runs only once.
     ## intersections_edge stores edge vs. crossings on the edge.
@@ -377,11 +275,6 @@ def crossing_matrices_bool(proj, inds, depth):
                 if bool_mask[i,j]==True:
                     pts_on_edge.append(u[i,j])                  
             intersections_edge[i]=pts_on_edge
-    ## Uncomment to view intersections_edge dictionary.        
-    #print('New points', intersections_edge) 
-    #for i in intersections_edge:
-        #print(i, intersections_edge[i])
-    #print('-------')
     ## v denotes new index label.        
     v=len(proj.keys()) 
     ## intersection pt vs new edges which contain it.
@@ -395,8 +288,6 @@ def crossing_matrices_bool(proj, inds, depth):
         mag_vs_pt = {}
         for elt in int_points:
             mag_vs_pt[math.dist(elt, proj[e[0]])] = elt
-        ## Uncomment to view mag_vs_pt dictionary.    
-        #print('Mag',e, mag_vs_pt)    
         ## Arrange the intersection points in ascending order in terms of their displacement magnitudes.
         mag_ord_keys = list(mag_vs_pt.keys())
         mag_ord_keys.sort()
@@ -427,13 +318,6 @@ def crossing_matrices_bool(proj, inds, depth):
                     intp_vs_newedges[str(p1)]=[ini_v]
                 edges[ini_v]=(ini_v,e[1])
                 inds[ini_v]=e[1]
-    ## Uncomment to print intersection pt vs participating edges (old and new)            
-    #print('IVE', intp_vs_edges)            
-    #print('IVNE',intp_vs_newedges, file=fid)
-    ## Uncomment to view the updated indices, proj and edges.
-    #print('inds2', inds)
-    #print('edges2',edges)
-    #print('proj',proj)
     ## Update the matrices to account for the newly introduced vertices.
     ## BM_2, OU_2 and RL_2 are expanded to make space for subdivided edges.
     modf_inds1 = {}
@@ -448,25 +332,20 @@ def crossing_matrices_bool(proj, inds, depth):
     OU_2= np.zeros((J_inds,J_inds), dtype=bool)
     RL_2= np.zeros((J_inds,J_inds), dtype=bool)
     for pt in intp_vs_newedges:
-        #print('PTTT',pt,intp_vs_newedges[pt])
         i=intp_vs_newedges[pt][0]
         j=intp_vs_newedges[pt][1]
         BM_2[i,j]=True
         BM_2[j,i]=True
         i0=intp_vs_edges[pt][0]
         j0=intp_vs_edges[pt][1]
-        #print('ptsss',i,j,i0,j0)
         OU_2[i,j]=np.copy(over_or_under)[i0,j0]
         OU_2[j,i]=np.copy(over_or_under)[j0,i0]
         RL_2[i,j]=np.copy(right_or_left)[i0,j0]
         RL_2[j,i]=np.copy(right_or_left)[j0,i0] 
-    #print('BM_2',BM_2[25])
-    #print('new_inds',inds)
     return BM_2, OU_2, RL_2, inds
 
 def gauss_code(bool_mask, over_or_under,inds):
     Gc=[]
-    #print('check inds',inds)
     labelss={}
     sl=0
     k=bool_mask.shape[0]
@@ -489,16 +368,11 @@ def gauss_code(bool_mask, over_or_under,inds):
 
 """Calculate BRACKET POLYNOMIAL using crossing matrices and associated properties"""
 def get_partial_poly(bool_mask, over_or_under, right_or_left, inds, clos_perm, modf_inds,states,S):
-    #print("#4")
-    #print('States',states)
     ## Check any entry in bool_mask is True
     if np.any(bool_mask):
-        #print('SS',states)
         edge1 = np.argmax(np.any(bool_mask, 0))
         edge2 = np.argmax(bool_mask[edge1,:])
-        #print('indices', modf_inds)
-        #print('edge1, edge2 :', edge1, edge2) 
-
+        
         bool_mask1 = np.copy(bool_mask)
         bool_mask1[edge1, edge2] = False
         bool_mask1[edge2, edge1] = False
@@ -511,9 +385,7 @@ def get_partial_poly(bool_mask, over_or_under, right_or_left, inds, clos_perm, m
     
         states1=list(np.copy(states))
         states2=list(np.copy(states))
-        #print('edges',edge1,edge2,'i over j', over_or_under[edge1, edge2], 'i right j', right_or_left[edge1, edge2])
         if over_or_under[edge1, edge2] == right_or_left[edge1, edge2]:
-            #print('pos',edge1,edge2)
             modf_inds1[edge1].append(inds[edge2])
             modf_inds1[edge2].append(inds[edge1])
             modf_inds2[edge1].append(edge2)
@@ -521,11 +393,7 @@ def get_partial_poly(bool_mask, over_or_under, right_or_left, inds, clos_perm, m
                 modf_inds2[inds[edge1]].append(inds[edge2]) 
             except:
                 modf_inds2[inds[edge1]]=[inds[edge2]]
-            #print('M1,M2', modf_inds1, modf_inds2)
-            #states1.append(1)
-            #states2.append(-1)
         else:
-            #print('neg',edge1,edge2)
             modf_inds1[edge1].append(edge2) 
             try:
                 modf_inds1[inds[edge1]].append(inds[edge2])
@@ -534,21 +402,11 @@ def get_partial_poly(bool_mask, over_or_under, right_or_left, inds, clos_perm, m
             
             modf_inds2[edge1].append(inds[edge2])
             modf_inds2[edge2].append(inds[edge1])
-            #print('M1,M2', modf_inds1, modf_inds2)
-            #states1.append(-1)
-            #states2.append(1)
         states1.append(1)
         states2.append(-1)
-        #print('States', states1)
-        #print('pp1')
         get_partial_poly(bool_mask1, np.copy(over_or_under), np.copy(right_or_left), inds, clos_perm, modf_inds1,states1,S)
-        #print('pp2')
         get_partial_poly(bool_mask2, np.copy(over_or_under), np.copy(right_or_left), inds, clos_perm, modf_inds2,states2,S)
     else:
-        #print('clos perm before USE', clos_perm)
-        #print(Loops(modf_inds,clos_perm,0)[1])
-        #print(Loops(modf_inds,clos_perm,1)[1])
-        #print('MODFF', modf_inds)
         raw_summand=(sum(states),Loops(modf_inds,clos_perm,1)[1])
         if not S:
             S.append({})
@@ -556,11 +414,9 @@ def get_partial_poly(bool_mask, over_or_under, right_or_left, inds, clos_perm, m
         # Count the number of empty sets
         empty_count = sum(1 for s in raw_summand[1] if not s)
         # Create the entry value
-        entry_value = (raw_summand[0], empty_count)  
-        #print('entry value loop count', entry_value)      
+        entry_value = (raw_summand[0], empty_count)       
         # Update the dictionary in A[0]
         if key==():
-            #print('empty keyyyy--------------')
             if key not in S[0]:
                 S[0][key] = J_mult({entry_value[0]:1},dfactor(entry_value[1]-1)) 
             else:
@@ -570,23 +426,12 @@ def get_partial_poly(bool_mask, over_or_under, right_or_left, inds, clos_perm, m
                 S[0][key] = J_mult({entry_value[0]:1},dfactor(entry_value[1])) 
             else:
                 S[0][key] = J_add(S[0][key],J_mult({entry_value[0]:1},dfactor(entry_value[1])))
-        #S.append((sum(states),Loops(modf_inds,clos_perm,1)[1]))
-    #J_add(Bkt_poly,J_mult({K[0]:1},dfactor(len(K[1])-1)))
-    #print('SSSS')
-    #print(S)
-    # for s in S[0]:
-    #     print(s, S[0][s])
-    # print('')
     return S
 
 ''' WRITHE '''
 def get_writhe(bool_mask, over_or_under, right_or_left):
-    #print("#5")
     BM=np.copy(bool_mask)
-    #print('pos cross',np.int32(over_or_under == right_or_left)[BM])
-    #print('neg cross',np.int32(over_or_under != right_or_left)[BM])
     Wr=(np.sum(np.int32(over_or_under == right_or_left)[BM])-np.sum(np.int32(over_or_under != right_or_left)[BM]))/2.
-    #print('Writhe Value',Wr)
     return Wr
 
 # Find the arc that forms the backbone of L1.
@@ -598,9 +443,6 @@ def find_arcs(inds, partition,clos_perm):
         I = [C[0] for C in C_bag] + [C[1] for C in C_bag]
         I_final = I[:]
         I_complement = [node[0] for other_subgraph in partition if other_subgraph != subgraph for node in other_subgraph.nodes()]+[node[1] for other_subgraph in partition if other_subgraph != subgraph for node in other_subgraph.nodes()]
-        print('inds and clos_perm', inds, clos_perm)
-        print('All of I', I_final)
-        print('I complement', I_complement)
         for i in I:
             print('start i', i)
             flag = 0
